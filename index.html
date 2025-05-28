@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #121212, #1b1b35);
+            color: white;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+        .welcome-text {
+            font-size: 5rem;
+            font-weight: bold;
+            color: #ff00ff;
+            text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff, 0 0 30px #ff00ff;
+            text-transform: uppercase;
+        }
+        .welcome-text span {
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 30px #00ffff;
+        }
+        .enter-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #ff00ff, #00ffff);
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 0 10px #ff00ff, 0 0 20px #00ffff;
+            transition: all 0.3s ease;
+        }
+        .enter-button:hover {
+            background: linear-gradient(135deg, #00ffff, #ff00ff);
+            box-shadow: 0 0 20px #00ffff, 0 0 30px #ff00ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="welcome-text">
+        Bienvenido <span>Lince</span>
+    </div>
+    <button class="enter-button" onclick="window.location.href='index.php'">Ingresar</button>
+</body>
+</html>

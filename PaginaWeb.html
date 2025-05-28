@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Banco de Prácticas RLC</title>
+
+  <!-- Firebase SDK v9 -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.3/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.3/firebase-database-compat.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-streaming"></script>
+
+  <!-- Fuente personalizada -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet" />
+
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-image: url('fondo.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+
+    #actuadores {
+      display: grid;
+      grid-template-columns: repeat(6, auto);
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+
+    .button-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 15px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: transform 0.2s, background-color 0.2s;
+      min-width: 100px;
+      text-align: center;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .button-indicator {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: red;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .button-indicator.active {
+      background-color: green;
+    }
+
+    .seccion-titulo {
+      grid-column: span 6;
+      font-weight: bold;
+      font-size: 18px;
+      margin: 10px 0 0 0;
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    canvas {
+      display: block;
+      margin: 0 auto;
+      max-width: 100%;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    #resetButton {
+      background-color: #e74c3c;
+      color: white;
+      font-weight: bold;
+      margin: 20px auto;
+      display: block;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.2s;
+    }
+
+    #resetButton:hover {
+      background-color: #c0392b;
+      transform: translateY(-2px);
+    }
+
+    #exitButton {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #95a5a6;
+      color: white;
+      font-weight: bold;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      z-index: 1000;
+      transition: background-color 0.2s, transform 0.2s;
+    }
+
+    #exitButton:hover {
+      background-color: #7f8c8d;
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <img src="LTnm.png" alt="TecNM" style="height: 80px;">
+    <img src="LITC.png" alt="ITCelaya" style="height: 80px;">
+    <img src="Lmtk.jpg" alt="Mecatrónica" style="height: 80px;">
+  </div>
+
+  <div class="container">
+    <h2>Control de Actuadores</h2>
+    <div id="actuadores"></div>
+    <button id="resetButton">Resetear Actuadores y Sensores</button>
+    <h2>Lecturas en Tiempo Real</h2>
+    <canvas id="sensorChart" width="800" height="400"></canvas>
+  </div>
+
+  <button id="exitButton">Salir</button>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "TU_API_KEY",
+      authDomain: "TU_AUTH_DOMAIN",
+      databaseURL: "https://banco-de-practicas-default-rtdb.firebaseio.com/",
+      projectId: "TU_PROJECT_ID",
+      storageBucket: "TU_STORAGE_BUCKET",
+      messagingSenderId: "TU_MESSAGING_SENDER_ID",
+      appId: "TU_APP_ID"
+    };
+	
+    firebase.initializeApp(firebaseConfig);
+	const db = firebase.database();
+
+	// Obtener el número de control de la URL
+	const params = new URLSearchParams(window.location.search);
+	const control = params.get("control");
+
+	// Verificar acceso exclusivo
+	db.ref().once("value").then(snapshot => {
+	  const data = snapshot.val();
+	  if (data.activo && data.usuario !== control) {
+		alert("Otra persona ya está usando el sistema.");
+		window.location.href = "index.php"; // Redirige al inicio
+	  } else {
+		db.ref().update({ activo: true, usuario: control });
+	  }
+	});
+
+    //const db = firebase.database();
+
+    const ids = [
+      "A1", "A13", "none",
+      "A14", "A15", "A16", "A18", "A19", "A20", "A22", "A23", "A24", "A17", "A21",
+      "A2", "A3", "A4", "A6", "A7", "A8", "A10", "A11", "A12", "A9", "A5"
+    ];
+
+    const secciones = [
+      { tipo: "botones", valores: ["DC"] },
+      { tipo: "titulo", texto: "Paralelo" },
+      { tipo: "botones", valores: ["220 ohms", "220 ohms", "220 ohms", "150 µH", "150 µH", "150 µH", "0.22 µF", "0.22 µF", "0.22 µF", "RL", "RC"] },
+      { tipo: "titulo", texto: "Serie" },
+      { tipo: "botones", valores: [
+        "220/220/220 ohms", "220/220 ohms", "220 ohms",
+        "150/150/150 µH", "150/150 µH", "150 µH",
+        "0.22/0.22/0.22 µF", "0.22/0.22 µF", "0.22 µF",
+        "RL", "RC"] }
+    ];
+
+    const container = document.getElementById("actuadores");
+    let actuadorCounter = 0;
+
+    secciones.forEach(seccion => {
+      if (seccion.tipo === "titulo") {
+        const titulo = document.createElement("div");
+        titulo.className = "seccion-titulo";
+        titulo.textContent = seccion.texto;
+        container.appendChild(titulo);
+      } else if (seccion.tipo === "botones") {
+        seccion.valores.forEach(nombre => {
+          const id = ids[actuadorCounter++] || `X${actuadorCounter}`;
+          const wrapper = document.createElement("div");
+          wrapper.className = "button-wrapper";
+
+          const btn = document.createElement("button");
+          btn.id = id;
+          btn.textContent = nombre;
+          btn.addEventListener("click", () => toggleActuator(id));
+
+          const indicator = document.createElement("div");
+          indicator.className = "button-indicator";
+          indicator.id = `${id}-indicator`;
+
+          wrapper.appendChild(btn);
+          wrapper.appendChild(indicator);
+          container.appendChild(wrapper);
+        });
+      }
+    });
+
+    function toggleActuator(actuatorId) {
+      const refAct = db.ref(actuatorId);
+      refAct.get().then(snapshot => {
+        const currentState = snapshot.exists() ? snapshot.val() : false;
+        refAct.set(!currentState)
+          .then(() => {
+            console.log(`Estado de ${actuatorId} cambiado a ${!currentState}`);
+            updateIndicator(actuatorId, !currentState);
+          })
+          .catch(err => console.error(`Error al actualizar ${actuatorId}:`, err));
+      });
+    }
+
+    function updateIndicator(actuatorId, isActive) {
+      const indicator = document.getElementById(`${actuatorId}-indicator`);
+      if (indicator) {
+        indicator.classList.toggle("active", isActive);
+      }
+    }
+
+    const latestValues = {
+      S1: 0, S2: 0, S3: 0, S4: 0,
+      S5: 0, S6: 0, S7: 0, S8: 0
+    };
+
+    ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8'].forEach(sensor => {
+      db.ref(sensor).on('value', snapshot => {
+        if (snapshot.exists()) {
+          latestValues[sensor] = snapshot.val();
+        }
+      });
+    });
+
+    const ctx = document.getElementById('sensorChart').getContext('2d');
+    const sensorChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        datasets: [
+          { label: 'Voltaje Paralelo', data: [], borderColor: 'red', fill: false },
+          { label: 'Voltaje Serie', data: [], borderColor: 'blue', fill: false },
+          { label: 'Corriente Paralelo', data: [], borderColor: 'green', fill: false },
+          { label: 'Corriente Serie', data: [], borderColor: 'orange', fill: false },
+          { label: 'Voltaje Paralelo 2', data: [], borderColor: 'purple', fill: false },
+          { label: 'Voltaje Serie 2', data: [], borderColor: 'brown', fill: false },
+          { label: 'Voltaje Paralelo 3', data: [], borderColor: 'pink', fill: false },
+          { label: 'Voltaje Serie 3', data: [], borderColor: 'gray', fill: false }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Sensores V y A en Tiempo Real',
+            color: 'black'
+          }
+        },
+        scales: {
+          x: {
+            type: 'realtime',
+            realtime: {
+              delay: 2000,
+              duration: 20000,
+              refresh: 1000,
+              onRefresh: chart => {
+                const now = Date.now();
+                chart.data.datasets[0].data.push({ x: now, y: latestValues.S1 });
+                chart.data.datasets[1].data.push({ x: now, y: latestValues.S2 });
+                chart.data.datasets[2].data.push({ x: now, y: latestValues.S3 });
+                chart.data.datasets[3].data.push({ x: now, y: latestValues.S4 });
+                chart.data.datasets[4].data.push({ x: now, y: latestValues.S5 });
+                chart.data.datasets[5].data.push({ x: now, y: latestValues.S6 });
+                chart.data.datasets[6].data.push({ x: now, y: latestValues.S7 });
+                chart.data.datasets[7].data.push({ x: now, y: latestValues.S8 });
+              }
+            }
+          },
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+
+    function resetDatabase() {
+      const updates = {};
+      for (let i = 1; i <= 24; i++) {
+        updates[`A${i}`] = false;
+      }
+      ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8'].forEach(sensor => {
+        updates[sensor] = 0;
+      });
+
+      db.ref().update(updates)
+        .then(() => {
+          console.log("Base de datos restablecida correctamente.");
+          for (let i = 1; i <= 24; i++) {
+            updateIndicator(`A${i}`, false);
+          }
+          alert("Actuadores y sensores reseteados.");
+          
+        })
+        .catch(err => {
+          console.error("Error al restablecer la base de datos:", err);
+          alert("Error al resetear los datos. Revisa la consola.");
+        });
+    }
+
+    document.getElementById("resetButton").addEventListener("click", resetDatabase);
+  </script>
+  <script>
+	document.getElementById("exitButton").addEventListener("click", function () {
+		const params = new URLSearchParams(window.location.search);
+		const control = params.get("control");
+
+		if (!control) {
+			alert("No se pudo registrar la salida: Número de control no disponible.");
+			return;
+		}
+
+		// Llama al script que registra la salida
+		fetch(`logout_ajax.php?control=${control}`)
+		  .then(() => {
+			// Libera el acceso exclusivo
+			db.ref().update({ activo: false, usuario: "" });
+
+			alert("Sesión cerrada correctamente.");
+			window.location.href = "index.php";
+		  });
+
+	});
+	</script>
+
+
+</body>
+</html>
+
